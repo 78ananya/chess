@@ -1,0 +1,75 @@
+document.addEventListener('DOMContentLoaded', () => {
+    const board = document.getElementById('chess-board');
+    const automaticButton = document.getElementById('automatic');
+    const boardSize = 8;
+    const squares = [];
+
+    const pieces = [
+        '♜', '♞', '♝', '♛', '♚', '♝', '♞', '♜',
+        '♟', '♟', '♟', '♟', '♟', '♟', '♟', '♟',
+        '', '', '', '', '', '', '', '',
+        '', '', '', '', '', '', '', '',
+        '', '', '', '', '', '', '', '',
+        '', '', '', '', '', '', '', '',
+        '♙', '♙', '♙', '♙', '♙', '♙', '♙', '♙',
+        '♖', '♘', '♗', '♕', '♔', '♗', '♘', '♖'
+    ];
+
+    // Create the chess board
+    for (let row = 0; row < boardSize; row++) {
+        for (let col = 0; col < boardSize; col++) {
+            const square = document.createElement('div');
+            square.classList.add('square');
+            square.classList.add((row + col) % 2 === 0 ? 'red' : 'black');
+            board.appendChild(square);
+            squares.push(square);
+        }
+    }
+
+    // Initialize the pieces
+    const initializePieces = () => {
+        for (let i = 0; i < pieces.length; i++) {
+            if (pieces[i] !== '') {
+                const pieceElement = document.createElement('div');
+                pieceElement.classList.add('piece');
+                pieceElement.innerText = pieces[i];
+                squares[i].appendChild(pieceElement);
+            }
+        }
+    }
+
+    initializePieces();
+
+    // Define moves for both players
+    const player1Moves = [
+        { from: 12, to: 28 },
+        { from: 13, to: 29 }
+    ];
+    const player2Moves = [
+        { from: 52, to: 36 },
+        { from: 53, to: 37 }
+    ];
+
+    let moveIndex = 0;
+    let currentPlayer = 1;
+
+    const movePiece = (from, to) => {
+        const piece = squares[from].firstElementChild;
+        if (piece) {
+            squares[to].appendChild(piece);
+        }
+    }
+
+    automaticButton.addEventListener('click', () => {
+        if (currentPlayer === 1 && moveIndex < player1Moves.length) {
+            const move = player1Moves[moveIndex];
+            movePiece(move.from, move.to);
+            currentPlayer = 2; // Switch to player 2
+        } else if (currentPlayer === 2 && moveIndex < player2Moves.length) {
+            const move = player2Moves[moveIndex];
+            movePiece(move.from, move.to);
+            currentPlayer = 1; // Switch to player 1
+            moveIndex++; // Increment move index after player 2 moves
+        }
+    });
+});
