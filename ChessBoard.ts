@@ -1,54 +1,57 @@
 import React from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../app/store';
-import { movePiece, resetBoard } from './chessSlice';
-import './ChessBoard.css';
+import ReactDOM from 'react-dom';
+import { LicenseManager } from '@ag-grid-enterprise/core';
+import { UMAConfig } from './config/index';
+import { Routing } from './routes/route';
 
-const ChessBoard: React.FC = () => {
-    const dispatch = useDispatch();
-    const board = useSelector((state: RootState) => state.chess.board);
-    const eliminatedPieces = useSelector((state: RootState) => state.chess.eliminatedPieces);
+describe('gridLicense', () => {
+  it('sets license key when config.REACT_APP_AG_GRID_KEY is present', () => {
+    const config = { REACT_APP_AG_GRID_KEY: 'dummy-key' };
+    gridLicense(config);
+    expect(LicenseManager.getLicenseKey()).toBe('dummy-key');
+  });
 
-    const handleAutomatic = () => {
-        const player1Moves = [
-            { from: 12, to: 28 },
-            { from: 13, to: 29 }
-        ];
-        const player2Moves = [
-            { from: 53, to: 37 },
-            { from: 37, to: 29 }
-        ];
+  it('sets license key when process.env.REACT_APP_AG_GRID_KEY is present', () => {
+    process.env.REACT_APP_AG_GRID_KEY = 'dummy-key';
+    const config = {};
+    gridLicense(config);
+    expect(LicenseManager.getLicenseKey()).toBe('dummy-key');
+  });
 
-        player1Moves.forEach((move, index) => {
-            setTimeout(() => {
-                dispatch(movePiece(move));
-                setTimeout(() => {
-                    dispatch(movePiece(player2Moves[index]));
-                }, 500);
-            }, index * 1000);
-        });
-    };
+  it('does not set license key when both are absent', () => {
+    const config = {};
+    gridLicense(config);
+    expect(LicenseManager.getLicenseKey()).toBeUndefined();
+  });
+});
 
-    return (
-        <div>
-            <div id="chess-board">
-                {board.map((piece, index) => (
-                    <div key={index} className={`square ${(index + Math.floor(index / 8)) % 2 === 0 ? 'red' : 'black'}`}>
-                        {piece && <div className={`piece ${piece === '♙' ? 'white-piece' : ''}`}>{piece}</div>}
-                    </div>
-                ))}
-            </div>
-            <div id="eliminated-pieces">
-                {eliminatedPieces.map((piece, index) => (
-                    <div key={index} className="piece">{piece}</div>
-                ))}
-            </div>
-            <div id="buttons-container">
-                <button id="automatic" onClick={handleAutomatic}>Automatic</button>
-                <button id="reset" onClick={() => dispatch(resetBoard())}>Reset</button>
-            </div>
-        </div>
-    );
-};
+describe('renderApp', () => {
+  it('renders Routing component correctly', () => {
+    const standAloneMountPoint = document.createElement('div');
+    renderApp();
+    expect(ReactDOM.render).toHaveBeenCalledTimes(1);
+    expect(ReactDOM.render).toHaveBeenCalledWith(<Routing />, standAloneMountPoint);
+  });
+});
 
-export default ChessBoard;
+describe('loadConfig', () => {
+  it('calls bootApp with correct config', async () => {
+    const config = { /* mock config */ };
+    const bootAppSpy = jest.spyOn(bootApp, 'bootApp');
+    await loadConfig();
+    expect(bootAppSpy).toHaveBeenCalledTimes(1);
+    expect(bootAppSpy).toHaveBeenCalledWith(config);
+  });
+});
+
+describe('bootApp', () => {
+  it('calls gridLicense and renderApp correctly', () => {
+    const config = { /* mock config */ };
+    const gridLicenseSpy = jest.spyOn(gridLicense, 'gridLicense');
+    const renderAppSpy = jest.spyOn(renderApp, 'renderApp');
+    bootApp(config);
+    expect(gridLicenseSpy).toHaveBeenCalledTimes(1);
+    expect(gridLicenseSpy).toHaveBeenCalledWith(config);
+    expect(renderAppSpy).toHaveBeenCalledTimes(1);
+  });
+});
