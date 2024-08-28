@@ -1,9 +1,3 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import { LicenseManager } from '@ag-grid-enterprise/core';
-import { UMAConfig } from './config/index';
-import { Routing } from './routes/route';
-
 describe('gridLicense', () => {
   it('sets license key when config.REACT_APP_AG_GRID_KEY is present', () => {
     const config = { REACT_APP_AG_GRID_KEY: 'dummy-key' };
@@ -23,6 +17,12 @@ describe('gridLicense', () => {
     gridLicense(config);
     expect(LicenseManager.getLicenseKey()).toBeUndefined();
   });
+
+  it('does not set license key when config is empty', () => {
+    const config = {};
+    gridLicense(config);
+    expect(LicenseManager.getLicenseKey()).toBeUndefined();
+  });
 });
 
 describe('renderApp', () => {
@@ -31,6 +31,14 @@ describe('renderApp', () => {
     renderApp();
     expect(ReactDOM.render).toHaveBeenCalledTimes(1);
     expect(ReactDOM.render).toHaveBeenCalledWith(<Routing />, standAloneMountPoint);
+  });
+
+  it('renders a mock Routing component correctly', () => {
+    const MockRouting = () => <div>Mock Routing Component</div>;
+    const standAloneMountPoint = document.createElement('div');
+    renderApp(MockRouting);
+    expect(ReactDOM.render).toHaveBeenCalledTimes(1);
+    expect(ReactDOM.render).toHaveBeenCalledWith(<MockRouting />, standAloneMountPoint);
   });
 });
 
@@ -42,16 +50,21 @@ describe('loadConfig', () => {
     expect(bootAppSpy).toHaveBeenCalledTimes(1);
     expect(bootAppSpy).toHaveBeenCalledWith(config);
   });
-});
 
-describe('bootApp', () => {
-  it('calls gridLicense and renderApp correctly', () => {
+  it('calls bootApp with a successful config load', async () => {
     const config = { /* mock config */ };
-    const gridLicenseSpy = jest.spyOn(gridLicense, 'gridLicense');
-    const renderAppSpy = jest.spyOn(renderApp, 'renderApp');
-    bootApp(config);
-    expect(gridLicenseSpy).toHaveBeenCalledTimes(1);
-    expect(gridLicenseSpy).toHaveBeenCalledWith(config);
-    expect(renderAppSpy).toHaveBeenCalledTimes(1);
+    const bootAppSpy = jest.spyOn(bootApp, 'bootApp');
+    await loadConfig();
+    expect(bootAppSpy).toHaveBeenCalledTimes(1);
+    expect(bootAppSpy).toHaveBeenCalledWith(config);
   });
+  it('handles errors when gridLicense and renderApp fail', () => {
+  const config = { /* mock config */ };
+  const gridLicenseSpy = jest.spyOn(gridLicense, 'gridLicense');
+  const renderAppSpy = jest.spyOn(renderApp, 'renderApp');
+  gridLicenseSpy.mockImplementation(() => { throw new Error('Grid license failed'); });
+  renderAppSpy.mockImplementation(() => { throw new Error('Render app failed'); });
+  expect(() => bootApp(config)).toThrowError('Grid license failed');
+  expect(() => bootApp(config)).toThrowError('Render app failed');
+});
 });
