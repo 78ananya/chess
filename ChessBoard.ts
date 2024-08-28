@@ -35,4 +35,10 @@ describe('valueGetterfunc', () => {
     expect(valueGetterfunc({ data: { test: 'hello' }, colDef: { field: 'test' } })).toBe('hello');
     expect(valueGetterfunc({ data: { test: 123 }, colDef: { field: 'test' } })).toBe(123);
   });
+
+  it('should return - if any part of the chain is null or undefined', () => {
+    expect(valueGetterfunc({ data: null, colDef: { field: 'test' } })).toBe('-');
+    expect(valueGetterfunc({ data: {}, colDef: null })).toBe('-');
+    expect(valueGetterfunc({ data: {}, colDef: { field: null } })).toBe('-');
+  });
 });
