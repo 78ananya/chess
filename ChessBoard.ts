@@ -1,11 +1,5 @@
-import Auth from './Auth';
-
 describe('Auth', () => {
-  let auth;
-
-  beforeEach(() => {
-    auth = new Auth ();
-  });
+  let auth = Auth; // import the default instance
 
   it('should be not authenticated by default', () => {
     expect(auth.isAuthenticated()).toBe(false);
