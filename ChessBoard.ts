@@ -1,33 +1,32 @@
-describe('Auth', () => {
+import Auth from './Auth';
+
+describe('Auth class', () => {
   let auth;
 
   beforeEach(() => {
-    auth = Auth.getInstance(); // or Auth.getDefaultInstance(), depending on the implementation
+    auth = new Auth();
   });
 
-  it('should be not authenticated by default', () => {
+  it('should be initially not authenticated', () => {
     expect(auth.isAuthenticated()).toBe(false);
   });
 
-  it('should authenticate when login is called', () => {
-    auth.login(() => {});
+  it('should login successfully', () => {
+    let loginCalled = false;
+    auth.login(() => {
+      loginCalled = true;
+    });
     expect(auth.isAuthenticated()).toBe(true);
+    expect(loginCalled).toBe(true);
   });
 
-  it('should not authenticate when logout is called', () => {
-    auth.logout(() => {});
+  it('should logout successfully', () => {
+    auth.login(() => {});
+    let logoutCalled = false;
+    auth.logout(() => {
+      logoutCalled = true;
+    });
     expect(auth.isAuthenticated()).toBe(false);
-  });
-
-  it('should call the callback when login is called', () => {
-    const cb = jest.fn();
-    auth.login(cb);
-    expect(cb).toHaveBeenCalledTimes(1);
-  });
-
-  it('should call the callback when logout is called', () => {
-    const cb = jest.fn();
-    auth.logout(cb);
-    expect(cb).toHaveBeenCalledTimes(1);
+    expect(logoutCalled).toBe(true);
   });
 });
