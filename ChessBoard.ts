@@ -1,32 +1,38 @@
-import Auth from './Auth';
-
-describe('Auth class', () => {
-  let auth;
-
-  beforeEach(() => {
-    auth = new Auth();
+describe('valueGetterfunc', () => {
+  it('should return - if params is null or undefined', () => {
+    expect(valueGetterfunc(null)).toBe('-');
+    expect(valueGetterfunc(undefined)).toBe('-');
   });
 
-  it('should be initially not authenticated', () => {
-    expect(auth.isAuthenticated()).toBe(false);
+  it('should return - if params.data is null or undefined', () => {
+    expect(valueGetterfunc({})).toBe('-');
+    expect(valueGetterfunc({ data: null })).toBe('-');
+    expect(valueGetterfunc({ data: undefined })).toBe('-');
   });
 
-  it('should login successfully', () => {
-    let loginCalled = false;
-    auth.login(() => {
-      loginCalled = true;
-    });
-    expect(auth.isAuthenticated()).toBe(true);
-    expect(loginCalled).toBe(true);
+  it('should return - if params.colDef is null or undefined', () => {
+    expect(valueGetterfunc({ data: {} })).toBe('-');
+    expect(valueGetterfunc({ data: {}, colDef: null })).toBe('-');
+    expect(valueGetterfunc({ data: {}, colDef: undefined })).toBe('-');
   });
 
-  it('should logout successfully', () => {
-    auth.login(() => {});
-    let logoutCalled = false;
-    auth.logout(() => {
-      logoutCalled = true;
-    });
-    expect(auth.isAuthenticated()).toBe(false);
-    expect(logoutCalled).toBe(true);
+  it('should return - if params.colDef.field is null or undefined', () => {
+    expect(valueGetterfunc({ data: {}, colDef: {} })).toBe('-');
+    expect(valueGetterfunc({ data: {}, colDef: { field: null } })).toBe('-');
+    expect(valueGetterfunc({ data: {}, colDef: { field: undefined } })).toBe('-');
+  });
+
+  it('should return - if value is null or undefined', () => {
+    expect(valueGetterfunc({ data: { test: null }, colDef: { field: 'test' } })).toBe('-');
+    expect(valueGetterfunc({ data: { test: undefined }, colDef: { field: 'test' } })).toBe('-');
+  });
+
+  it('should return - if value is string "null"', () => {
+    expect(valueGetterfunc({ data: { test: 'null' }, colDef: { field: 'test' } })).toBe('-');
+  });
+
+  it('should return the value if it exists', () => {
+    expect(valueGetterfunc({ data: { test: 'hello' }, colDef: { field: 'test' } })).toBe('hello');
+    expect(valueGetterfunc({ data: { test: 123 }, colDef: { field: 'test' } })).toBe(123);
   });
 });
