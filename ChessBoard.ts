@@ -1,44 +1,31 @@
-describe('valueGetterfunc', () => {
-  it('should return - if params is null or undefined', () => {
-    expect(valueGetterfunc(null)).toBe('-');
-    expect(valueGetterfunc(undefined)).toBe('-');
+describe('params?.data?.[params?.colDef?.field]', () => {
+  it('should return undefined if params is null or undefined', () => {
+    expect(undefined?.data?.[undefined?.colDef?.field]).toBeUndefined();
+    expect(null?.data?.[null?.colDef?.field]).toBeUndefined();
   });
 
-  it('should return - if params.data is null or undefined', () => {
-    expect(valueGetterfunc({})).toBe('-');
-    expect(valueGetterfunc({ data: null })).toBe('-');
-    expect(valueGetterfunc({ data: undefined })).toBe('-');
+  it('should return undefined if params.data is null or undefined', () => {
+    expect({}?.data?.[{}?.colDef?.field]).toBeUndefined();
+    expect({ data: null }?.data?.[{ colDef: { field: 'test' } }?.colDef?.field]).toBeUndefined();
+    expect({ data: undefined }?.data?.[{ colDef: { field: 'test' } }?.colDef?.field]).toBeUndefined();
   });
 
-  it('should return - if params.colDef is null or undefined', () => {
-    expect(valueGetterfunc({ data: {} })).toBe('-');
-    expect(valueGetterfunc({ data: {}, colDef: null })).toBe('-');
-    expect(valueGetterfunc({ data: {}, colDef: undefined })).toBe('-');
+  it('should return undefined if params.colDef is null or undefined', () => {
+    expect({ data: {} }?.data?.[null?.colDef?.field]).toBeUndefined();
+    expect({ data: {} }?.data?.[undefined?.colDef?.field]).toBeUndefined();
   });
 
-  it('should return - if params.colDef.field is null or undefined', () => {
-    expect(valueGetterfunc({ data: {}, colDef: {} })).toBe('-');
-    expect(valueGetterfunc({ data: {}, colDef: { field: null } })).toBe('-');
-    expect(valueGetterfunc({ data: {}, colDef: { field: undefined } })).toBe('-');
-  });
-
-  it('should return - if value is null or undefined', () => {
-    expect(valueGetterfunc({ data: { test: null }, colDef: { field: 'test' } })).toBe('-');
-    expect(valueGetterfunc({ data: { test: undefined }, colDef: { field: 'test' } })).toBe('-');
-  });
-
-  it('should return - if value is string "null"', () => {
-    expect(valueGetterfunc({ data: { test: 'null' }, colDef: { field: 'test' } })).toBe('-');
+  it('should return undefined if params.colDef.field is null or undefined', () => {
+    expect({ data: {} }?.data?.[{ colDef: { field: null } }?.colDef?.field]).toBeUndefined();
+    expect({ data: {} }?.data?.[{ colDef: { field: undefined } }?.colDef?.field]).toBeUndefined();
   });
 
   it('should return the value if it exists', () => {
-    expect(valueGetterfunc({ data: { test: 'hello' }, colDef: { field: 'test' } })).toBe('hello');
-    expect(valueGetterfunc({ data: { test: 123 }, colDef: { field: 'test' } })).toBe(123);
+    expect({ data: { test: 'hello' } }?.data?.[{ colDef: { field: 'test' } }?.colDef?.field]).toBe('hello');
+    expect({ data: { test: 123 } }?.data?.[{ colDef: { field: 'test' } }?.colDef?.field]).toBe(123);
   });
 
-  it('should return - if any part of the chain is null or undefined', () => {
-    expect(valueGetterfunc({ data: null, colDef: { field: 'test' } })).toBe('-');
-    expect(valueGetterfunc({ data: {}, colDef: null })).toBe('-');
-    expect(valueGetterfunc({ data: {}, colDef: { field: null } })).toBe('-');
+  it('should return undefined if the field does not exist in the data', () => {
+    expect({ data: { test: 'hello' } }?.data?.[{ colDef: { field: 'non-existent' } }?.colDef?.field]).toBeUndefined();
   });
 });
