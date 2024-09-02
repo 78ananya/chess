@@ -1,8 +1,6 @@
-import { register, unregister } from './serviceWorkerRegistration'; // adjust the import according to your file structure
-import { isLocalhost } from './serviceWorkerRegistration'; 
 describe('isLocalhost', () => {
   it('should return true for localhost hostname', () => {
-    global.window = Object.create(window);
+    // Setup window.location.hostname to 'localhost'
     Object.defineProperty(window, 'location', {
       value: {
         hostname: 'localhost',
@@ -14,7 +12,7 @@ describe('isLocalhost', () => {
   });
 
   it('should return false for non-localhost hostname', () => {
-    global.window = Object.create(window);
+    // Setup window.location.hostname to something other than 'localhost'
     Object.defineProperty(window, 'location', {
       value: {
         hostname: 'example.com',
@@ -28,14 +26,17 @@ describe('isLocalhost', () => {
 
 describe('register', () => {
   beforeEach(() => {
+    // Clear all mocks before each test
     global.navigator.serviceWorker.register.mockClear();
     global.fetch.mockClear();
+    console.error = jest.fn(); // Suppress console.error for tests
   });
 
   it('should register service worker if in production', () => {
     process.env.NODE_ENV = 'production';
     process.env.PUBLIC_URL = 'http://localhost:3000';
-    global.window = Object.create(window);
+    
+    // Setup window.location.href for testing
     Object.defineProperty(window, 'location', {
       value: {
         href: 'http://localhost:3000',
@@ -60,7 +61,7 @@ describe('register', () => {
   it('should handle service worker registration error', () => {
     process.env.NODE_ENV = 'production';
     process.env.PUBLIC_URL = 'http://localhost:3000';
-    global.window = Object.create(window);
+    
     Object.defineProperty(window, 'location', {
       value: {
         href: 'http://localhost:3000',
@@ -69,8 +70,6 @@ describe('register', () => {
     });
 
     global.fetch.mockRejectedValue(new Error('Network error'));
-
-    console.error = jest.fn(); // Suppress the error output for test
 
     register({
       onUpdate: jest.fn(),
@@ -83,6 +82,7 @@ describe('register', () => {
 
 describe('unregister', () => {
   it('should unregister service worker', async () => {
+    // Setup navigator.serviceWorker.ready to resolve with a mock object
     global.navigator.serviceWorker.ready = Promise.resolve({
       unregister: jest.fn().mockResolvedValue(true),
     });
