@@ -1,95 +1,151 @@
-describe('isLocalhost', () => {
-  it('should return true for localhost hostname', () => {
-    // Setup window.location.hostname to 'localhost'
-    Object.defineProperty(window, 'location', {
-      value: {
-        hostname: 'localhost',
-      },
-      writable: true,
-    });
+import { register, unregister, isLocalhost } from './serviceWorker';
 
+describe('isLocalhost function', () => {
+  it('should return true for localhost', () => {
+    delete window.location;
+    window.location = { hostname: 'localhost' };
     expect(isLocalhost()).toBe(true);
   });
 
-  it('should return false for non-localhost hostname', () => {
-    // Setup window.location.hostname to something other than 'localhost'
-    Object.defineProperty(window, 'location', {
-      value: {
-        hostname: 'example.com',
-      },
-      writable: true,
-    });
+  it('should return true for [::1]', () => {
+    delete window.location;
+    window.location = { hostname: '[::1]' };
+    expect(isLocalhost()).toBe(true);
+  });
 
+  it('should return true for 127.0.0.1', () => {
+    delete window.location;
+    window.location = { hostname: '127.0.0.1' };
+    expect(isLocalhost()).toBe(true);
+  });
+
+  it('should return false for other hostnames', () => {
+    delete window.location;
+    window.location = { hostname: 'example.com' };
     expect(isLocalhost()).toBe(false);
   });
 });
 
-describe('register', () => {
-  beforeEach(() => {
-    // Clear all mocks before each test
-    global.navigator.serviceWorker.register.mockClear();
-    global.fetch.mockClear();
-    console.error = jest.fn(); // Suppress console.error for tests
+describe('register function', () => {
+  it('should register service worker when not on localhost', () => {
+    delete window.location;
+    window.location = { hostname: 'example.com', href: 'https://example.com' };
+    const config = { onSuccess: jest.fn() };
+    const registerValidSW = jest.fn();
+    jest.spyOn(navigator.serviceWorker, 'register').mockResolvedValue({
+      onupdatefound: jest.fn(),
+      installing: { onstatechange: jest.fn() },
+    });
+    jest.spyOn(console, 'log').mockImplementation(() => {});
+    register(config);
+    expect(registerValidSW).toHaveBeenCalledTimes(1);
   });
 
-  it('should register service worker if in production', () => {
-    process.env.NODE_ENV = 'production';
-    process.env.PUBLIC_URL = 'http://localhost:3000';
-    
-    // Setup window.location.href for testing
-    Object.defineProperty(window, 'location', {
-      value: {
-        href: 'http://localhost:3000',
-      },
-      writable: true,
+  it('should check for valid service worker when on localhost', () => {
+    delete window.location;
+    window.location = { hostname: 'localhost', href: 'https://localhost' };
+    const config = { onSuccess: jest.fn() };
+    const checkValidServiceWorker = jest.fn();
+    jest.spyOn(navigator.serviceWorker, 'ready').mockResolvedValue({
+      then: jest.fn(),
     });
-
-    const mockSWUrl = 'http://localhost:3000/service-worker.js';
-    global.fetch.mockResolvedValue({
-      headers: new Map([['content-type', 'application/javascript']]),
-      status: 200,
-    });
-
-    register({
-      onUpdate: jest.fn(),
-      onSuccess: jest.fn(),
-    });
-
-    expect(global.navigator.serviceWorker.register).toHaveBeenCalledWith(mockSWUrl);
+    jest.spyOn(console, 'log').mockImplementation(() => {});
+    register(config);
+    expect(checkValidServiceWorker).toHaveBeenCalledTimes(1);
   });
 
-  it('should handle service worker registration error', () => {
-    process.env.NODE_ENV = 'production';
-    process.env.PUBLIC_URL = 'http://localhost:3000';
-    
-    Object.defineProperty(window, 'location', {
-      value: {
-        href: 'http://localhost:3000',
-      },
-      writable: true,
+  it('should not register service worker when PUBLIC_URL is on a different origin', () => {
+    delete window.location;
+    window.location = { hostname: 'example.com', href: 'https://example.com', origin: 'https://example.com' };
+    const config = { onSuccess: jest.fn() };
+    const registerValidSW = jest.fn();
+    jest.spyOn(navigator.serviceWorker, 'register').mockResolvedValue({
+      onupdatefound: jest.fn(),
+      installing: { onstatechange: jest.fn() },
     });
-
-    global.fetch.mockRejectedValue(new Error('Network error'));
-
-    register({
-      onUpdate: jest.fn(),
-      onSuccess: jest.fn(),
-    });
-
-    expect(console.error).toHaveBeenCalledWith('Error during service worker registration:', expect.any(Error));
+    jest.spyOn(console, 'log').mockImplementation(() => {});
+    process.env.PUBLIC_URL = 'https://different-origin.com';
+    register(config);
+    expect(registerValidSW).not.toHaveBeenCalled();
   });
 });
 
-describe('unregister', () => {
-  it('should unregister service worker', async () => {
-    // Setup navigator.serviceWorker.ready to resolve with a mock object
-    global.navigator.serviceWorker.ready = Promise.resolve({
-      unregister: jest.fn().mockResolvedValue(true),
+describe('unregister function', () => {
+  it('should unregister service worker', () => {
+    const unregisterServiceWorker = jest.fn();
+    jest.spyOn(navigator.serviceWorker, 'ready').mockResolvedValue({
+      unregister: unregisterServiceWorker,
     });
+    unregister();
+    expect(unregisterServiceWorker).toHaveBeenCalledTimes(1);
+  });
+});
 
-    await unregister();
+describe('registerValidSW function', () => {
+  it('should register service worker and call onSuccess callback', () => {
+    const config = { onSuccess: jest.fn() };
+    const swUrl = 'https://example.com/service-worker.js';
+    const registration = {
+      onupdatefound: jest.fn(),
+      installing: { onstatechange: jest.fn() },
+    };
+    jest.spyOn(navigator.serviceWorker, 'register').mockResolvedValue(registration);
+    jest.spyOn(console, 'log').mockImplementation(() => {});
+    registerValidSW(swUrl, config);
+    expect(config.onSuccess).toHaveBeenCalledTimes(1);
+  });
 
-    expect(global.navigator.serviceWorker.ready).toBeDefined();
-    expect(global.navigator.serviceWorker.ready.then).toHaveBeenCalledWith(expect.any(Function));
+  it('should register service worker and call onUpdate callback', () => {
+    const config = { onUpdate: jest.fn() };
+    const swUrl = 'https://example.com/service-worker.js';
+    const registration = {
+      onupdatefound: jest.fn(),
+      installing: { onstatechange: jest.fn() },
+      controller: true,
+    };
+    jest.spyOn(navigator.serviceWorker, 'register').mockResolvedValue(registration);
+    jest.spyOn(console, 'log').mockImplementation(() => {});
+    registerValidSW(swUrl, config);
+    expect(config.onUpdate).toHaveBeenCalledTimes(1);
+  });
+});
+describe('checkValidServiceWorker function', () => {
+  it('should check for valid service worker and call registerValidSW if valid', () => {
+    const config = { onSuccess: jest.fn() };
+    const swUrl = 'https://example.com/service-worker.js';
+    const response = {
+      status: 200,
+      headers: {
+        get: () => 'application/javascript',
+      },
+    };
+    const registerValidSW = jest.fn();
+    jest.spyOn(window, 'fetch').mockResolvedValue(response);
+    checkValidServiceWorker(swUrl, config);
+    expect(registerValidSW).toHaveBeenCalledTimes(1);
+  });
+
+  it('should unregister service worker if not valid', () => {
+    const config = { onSuccess: jest.fn() };
+    const swUrl = 'https://example.com/service-worker.js';
+    const response = {
+      status: 404,
+    };
+    const unregister = jest.fn();
+    jest.spyOn(window, 'fetch').mockResolvedValue(response);
+    jest.spyOn(navigator.serviceWorker, 'ready').mockResolvedValue({
+      unregister,
+    });
+    checkValidServiceWorker(swUrl, config);
+    expect(unregister).toHaveBeenCalledTimes(1);
+  });
+
+  it('should log error if no internet connection', () => {
+    const config = { onSuccess: jest.fn() };
+    const swUrl = 'https://example.com/service-worker.js';
+    jest.spyOn(window, 'fetch').mockRejectedValue(new Error('No internet connection'));
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+    checkValidServiceWorker(swUrl, config);
+    expect(consoleError).toHaveBeenCalledTimes(1);
   });
 });
