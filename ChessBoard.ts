@@ -1,63 +1,111 @@
+import React from 'react';
+import { mount } from 'enzyme';
+import { StyleCreation } from './StyleCreation';
+import { StyleDetails } from './styleDetails';
+import { Dashboard } from '../dashboard';
+import { styleSteps } from '../utils/strategyMasterUtil'; // Import the mock styleSteps if necessary
+
 describe('StyleCreation Component', () => {
   let wrapper;
+  let mockNextRef;
 
   beforeEach(() => {
-    // Mount the component with mock data
+    // Mock nextRef to simulate the ref behavior
+    mockNextRef = {
+      current: {
+        nextValidationHandler: jest.fn().mockReturnValue(true),
+        prevHandler: jest.fn(),
+        resetStateHandler: jest.fn(),
+      },
+    };
+
+    // Mount the component and pass the mock ref
     wrapper = mount(<StyleCreation />);
+    // Manually set the ref to the mock value
+    wrapper.setProps({ nextRef: mockNextRef });
   });
 
-  it('should render correctly', () => {
-    expect(wrapper.exists()).toBe(true);
+  it('should reset state when isCreateAnotherStyle changes', () => {
+    // Set isCreateAnotherStyle to true to trigger the useEffect
+    wrapper.setState({ isCreateAnotherStyle: true });
+    wrapper.update();
+
+    // Check if state has been reset
+    expect(wrapper.find(StyleCreation).instance().state.currentView).toBe(1);
+    expect(wrapper.find(StyleCreation).instance().state.steps).toEqual(styleSteps);
+    expect(wrapper.find(StyleCreation).instance().state.invStyleName).toBe("");
+    expect(wrapper.find(StyleCreation).instance().state.isStyleFlowDone).toBe(false);
+    expect(wrapper.find(StyleCreation).instance().state.isCreateAnotherStyle).toBe(true);
+    expect(wrapper.find(StyleCreation).instance().state.invStyleDetails).toEqual([]);
   });
 
-  it('should change to view 2 on "Next" button click from view 1', () => {
-    // Simulate clicking the "Next" button
-    wrapper.find('button').filterWhere(btn => btn.text() === 'Next').simulate('click');
-    wrapper.update(); // Ensure the view has updated
-    // Check if the view has changed to view 2
-    expect(wrapper.find('button').filterWhere(btn => btn.text() === 'Create').exists()).toBe(true);
+  it('should change to view 2 on nextFlowHandler if currentView is 1', () => {
+    wrapper.setState({ currentView: 1 });
+    wrapper.update();
+
+    // Simulate nextFlowHandler call
+    wrapper.find(StyleCreation).instance().nextFlowHandler();
+    wrapper.update();
+
+    // Verify state change
+    expect(wrapper.find(StyleCreation).instance().state.currentView).toBe(2);
   });
 
-  it('should change to view 1 on "Previous" button click from view 2', () => {
-    // Simulate going to view 2
-    wrapper.find('button').filterWhere(btn => btn.text() === 'Next').simulate('click');
-    wrapper.update(); // Ensure the view has updated
-    // Simulate clicking the "Previous" button
-    wrapper.find('button').filterWhere(btn => btn.text() === 'Previous').simulate('click');
-    wrapper.update(); // Ensure the view has updated
-    // Check if the view has changed back to view 1
-    expect(wrapper.find('button').filterWhere(btn => btn.text() === 'Next').exists()).toBe(true);
+  it('should change to view 3 on nextFlowHandler if currentView is 2', () => {
+    wrapper.setState({ currentView: 2 });
+    wrapper.update();
+
+    // Simulate nextFlowHandler call
+    wrapper.find(StyleCreation).instance().nextFlowHandler();
+    wrapper.update();
+
+    // Verify state change
+    expect(wrapper.find(StyleCreation).instance().state.currentView).toBe(3);
   });
 
-  it('should show "Create Another Style" button and switch to StyleDetails on click', () => {
-    // Simulate going to view 2
-    wrapper.find('button').filterWhere(btn => btn.text() === 'Next').simulate('click');
-    wrapper.update(); // Ensure the view has updated
-    // Simulate clicking "Create Another Style" button
-    wrapper.find('button').filterWhere(btn => btn.text() === 'Create Another Style').simulate('click');
-    wrapper.update(); // Ensure the component has updated
-    // Check if the StyleDetails component is rendered
-    expect(wrapper.find(StyleDetails).exists()).toBe(true);
+  it('should change to view 1 on previousFlowHandler if currentView is 2', () => {
+    wrapper.setState({ currentView: 2 });
+    wrapper.update();
+
+    // Simulate previousFlowHandler call
+    wrapper.find(StyleCreation).instance().previousFlowHandler();
+    wrapper.update();
+
+    // Verify state change
+    expect(wrapper.find(StyleCreation).instance().state.currentView).toBe(1);
   });
 
-  it('should render Dashboard on "Done" button click', () => {
-    // Simulate going to view 2
-    wrapper.find('button').filterWhere(btn => btn.text() === 'Next').simulate('click');
-    wrapper.update(); // Ensure the view has updated
-    // Simulate clicking "Done" button
-    wrapper.find('button').filterWhere(btn => btn.text() === 'Done').simulate('click');
-    wrapper.update(); // Ensure the component has updated
-    // Check if the Dashboard component is rendered
-    expect(wrapper.find(Dashboard).exists()).toBe(true);
+  it('should call resetStateHandler on initialStateHandler', () => {
+    // Simulate initialStateHandler call
+    wrapper.find(StyleCreation).instance().initialStateHandler();
+    wrapper.update();
+
+    // Verify resetStateHandler was called
+    expect(mockNextRef.current.resetStateHandler).toHaveBeenCalled();
   });
 
-  it('should handle Reset button click', () => {
-    // Simulate going to view 2
-    wrapper.find('button').filterWhere(btn => btn.text() === 'Next').simulate('click');
-    wrapper.update(); // Ensure the view has updated
-    // Simulate Reset button click
-    wrapper.find('button').filterWhere(btn => btn.text() === 'Reset').simulate('click');
-    wrapper.update(); // Ensure the component has updated
-    // Add specific assertions to verify reset behavior if necessary
+  it('should set isStyleFlowDone to true and clear dropdown on exitStyleHandler', () => {
+    // Mock document query selector
+    document.querySelector = jest.fn().mockReturnValue({
+      value: "some value",
+    });
+
+    // Simulate exitStyleHandler call
+    wrapper.find(StyleCreation).instance().exitStyleHandler();
+    wrapper.update();
+
+    // Verify state and dropdown changes
+    expect(wrapper.find(StyleCreation).instance().state.isStyleFlowDone).toBe(true);
+    expect(document.querySelector).toHaveBeenCalledWith("#create-new");
+    expect(document.querySelector().value).toBe("");
+  });
+
+  it('should set isCreateAnotherStyle to true on createAnotherStyleHandler', () => {
+    // Simulate createAnotherStyleHandler call
+    wrapper.find(StyleCreation).instance().createAnotherStyleHandler();
+    wrapper.update();
+
+    // Verify state change
+    expect(wrapper.find(StyleCreation).instance().state.isCreateAnotherStyle).toBe(true);
   });
 });
