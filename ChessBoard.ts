@@ -1,11 +1,4 @@
-describe('StyleCreation Component', () => {
-  let wrapper: any;
-
-  beforeEach(() => {
-    wrapper = mount(<StyleCreation />);
-  });
-
-  it('should render correctly', () => {
+ it('should render correctly', () => {
     expect(wrapper.exists()).toBe(true);
   });
 
