@@ -1,111 +1,95 @@
-import React from 'react';
-import { mount } from 'enzyme';
-import { StyleCreation } from './StyleCreation';
-import { StyleDetails } from './styleDetails';
-import { Dashboard } from '../dashboard';
-import { styleSteps } from '../utils/strategyMasterUtil'; // Import the mock styleSteps if necessary
-
-describe('StyleCreation Component', () => {
-  let wrapper;
-  let mockNextRef;
-
-  beforeEach(() => {
-    // Mock nextRef to simulate the ref behavior
-    mockNextRef = {
-      current: {
-        nextValidationHandler: jest.fn().mockReturnValue(true),
-        prevHandler: jest.fn(),
-        resetStateHandler: jest.fn(),
+import { register, unregister } from './serviceWorkerRegistration'; // adjust the import according to your file structure
+import { isLocalhost } from './serviceWorkerRegistration'; 
+describe('isLocalhost', () => {
+  it('should return true for localhost hostname', () => {
+    global.window = Object.create(window);
+    Object.defineProperty(window, 'location', {
+      value: {
+        hostname: 'localhost',
       },
-    };
-
-    // Mount the component and pass the mock ref
-    wrapper = mount(<StyleCreation />);
-    // Manually set the ref to the mock value
-    wrapper.setProps({ nextRef: mockNextRef });
-  });
-
-  it('should reset state when isCreateAnotherStyle changes', () => {
-    // Set isCreateAnotherStyle to true to trigger the useEffect
-    wrapper.setState({ isCreateAnotherStyle: true });
-    wrapper.update();
-
-    // Check if state has been reset
-    expect(wrapper.find(StyleCreation).instance().state.currentView).toBe(1);
-    expect(wrapper.find(StyleCreation).instance().state.steps).toEqual(styleSteps);
-    expect(wrapper.find(StyleCreation).instance().state.invStyleName).toBe("");
-    expect(wrapper.find(StyleCreation).instance().state.isStyleFlowDone).toBe(false);
-    expect(wrapper.find(StyleCreation).instance().state.isCreateAnotherStyle).toBe(true);
-    expect(wrapper.find(StyleCreation).instance().state.invStyleDetails).toEqual([]);
-  });
-
-  it('should change to view 2 on nextFlowHandler if currentView is 1', () => {
-    wrapper.setState({ currentView: 1 });
-    wrapper.update();
-
-    // Simulate nextFlowHandler call
-    wrapper.find(StyleCreation).instance().nextFlowHandler();
-    wrapper.update();
-
-    // Verify state change
-    expect(wrapper.find(StyleCreation).instance().state.currentView).toBe(2);
-  });
-
-  it('should change to view 3 on nextFlowHandler if currentView is 2', () => {
-    wrapper.setState({ currentView: 2 });
-    wrapper.update();
-
-    // Simulate nextFlowHandler call
-    wrapper.find(StyleCreation).instance().nextFlowHandler();
-    wrapper.update();
-
-    // Verify state change
-    expect(wrapper.find(StyleCreation).instance().state.currentView).toBe(3);
-  });
-
-  it('should change to view 1 on previousFlowHandler if currentView is 2', () => {
-    wrapper.setState({ currentView: 2 });
-    wrapper.update();
-
-    // Simulate previousFlowHandler call
-    wrapper.find(StyleCreation).instance().previousFlowHandler();
-    wrapper.update();
-
-    // Verify state change
-    expect(wrapper.find(StyleCreation).instance().state.currentView).toBe(1);
-  });
-
-  it('should call resetStateHandler on initialStateHandler', () => {
-    // Simulate initialStateHandler call
-    wrapper.find(StyleCreation).instance().initialStateHandler();
-    wrapper.update();
-
-    // Verify resetStateHandler was called
-    expect(mockNextRef.current.resetStateHandler).toHaveBeenCalled();
-  });
-
-  it('should set isStyleFlowDone to true and clear dropdown on exitStyleHandler', () => {
-    // Mock document query selector
-    document.querySelector = jest.fn().mockReturnValue({
-      value: "some value",
+      writable: true,
     });
 
-    // Simulate exitStyleHandler call
-    wrapper.find(StyleCreation).instance().exitStyleHandler();
-    wrapper.update();
-
-    // Verify state and dropdown changes
-    expect(wrapper.find(StyleCreation).instance().state.isStyleFlowDone).toBe(true);
-    expect(document.querySelector).toHaveBeenCalledWith("#create-new");
-    expect(document.querySelector().value).toBe("");
+    expect(isLocalhost()).toBe(true);
   });
 
-  it('should set isCreateAnotherStyle to true on createAnotherStyleHandler', () => {
-    // Simulate createAnotherStyleHandler call
-    wrapper.find(StyleCreation).instance().createAnotherStyleHandler();
-    wrapper.update();
+  it('should return false for non-localhost hostname', () => {
+    global.window = Object.create(window);
+    Object.defineProperty(window, 'location', {
+      value: {
+        hostname: 'example.com',
+      },
+      writable: true,
+    });
 
-    // Verify state change
-    expect(wrapper.find(StyleCreation).instance().state.isCreateAnotherStyle).toBe(true);
+    expect(isLocalhost()).toBe(false);
+  });
+});
+
+describe('register', () => {
+  beforeEach(() => {
+    global.navigator.serviceWorker.register.mockClear();
+    global.fetch.mockClear();
+  });
+
+  it('should register service worker if in production', () => {
+    process.env.NODE_ENV = 'production';
+    process.env.PUBLIC_URL = 'http://localhost:3000';
+    global.window = Object.create(window);
+    Object.defineProperty(window, 'location', {
+      value: {
+        href: 'http://localhost:3000',
+      },
+      writable: true,
+    });
+
+    const mockSWUrl = 'http://localhost:3000/service-worker.js';
+    global.fetch.mockResolvedValue({
+      headers: new Map([['content-type', 'application/javascript']]),
+      status: 200,
+    });
+
+    register({
+      onUpdate: jest.fn(),
+      onSuccess: jest.fn(),
+    });
+
+    expect(global.navigator.serviceWorker.register).toHaveBeenCalledWith(mockSWUrl);
+  });
+
+  it('should handle service worker registration error', () => {
+    process.env.NODE_ENV = 'production';
+    process.env.PUBLIC_URL = 'http://localhost:3000';
+    global.window = Object.create(window);
+    Object.defineProperty(window, 'location', {
+      value: {
+        href: 'http://localhost:3000',
+      },
+      writable: true,
+    });
+
+    global.fetch.mockRejectedValue(new Error('Network error'));
+
+    console.error = jest.fn(); // Suppress the error output for test
+
+    register({
+      onUpdate: jest.fn(),
+      onSuccess: jest.fn(),
+    });
+
+    expect(console.error).toHaveBeenCalledWith('Error during service worker registration:', expect.any(Error));
+  });
+});
+
+describe('unregister', () => {
+  it('should unregister service worker', async () => {
+    global.navigator.serviceWorker.ready = Promise.resolve({
+      unregister: jest.fn().mockResolvedValue(true),
+    });
+
+    await unregister();
+
+    expect(global.navigator.serviceWorker.ready).toBeDefined();
+    expect(global.navigator.serviceWorker.ready.then).toHaveBeenCalledWith(expect.any(Function));
   });
 });
