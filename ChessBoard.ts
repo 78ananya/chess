@@ -1,37 +1,47 @@
-import Auth from './auth'; // Assuming auth.js is in the same directory
+describe('DashboardMenuTabs', () => {
+  it('renders correctly with initial props', () => {
+    const menuTabs = [
+      { title: 'Tab 1', number: 1 },
+      { title: 'Tab 2', number: 2 }
+    ];
 
-describe('Auth class', () => {
-  let auth;
+    const wrapper = shallow(<DashboardMenuTabs menuTabs={menuTabs} />);
 
-  beforeEach(() => {
-    auth = new Auth();
+    expect(wrapper).toMatchSnapshot();
   });
+  it('updates selectedTab when a tab is clicked', () => {
+  const menuTabs = [
+    { title: 'Tab 1', number: 1 },
+    { title: 'Tab 2', number: 2 }
+  ];
 
-  test('constructor initializes authenticated property to false', () => {
-    expect(auth.authenticated).toBe(false);
-  });
+  const wrapper = shallow(<DashboardMenuTabs menuTabs={menuTabs} />);
 
-  test('login sets authenticated property to true and calls callback', () => {
-    const cb = jest.fn();
-    auth.login(cb);
-    expect(auth.authenticated).toBe(true);
-    expect(cb).toHaveBeenCalled();
-  });
+  // Simulate clicking on the first tab
+  wrapper.find('button').first().simulate('click');
 
-  test('logout sets authenticated property to false and calls callback', () => {
-    auth.authenticated = true;
-    const cb = jest.fn();
-    auth.logout(cb);
-    expect(auth.authenticated).toBe(false);
-    expect(cb).toHaveBeenCalled();
-  });
+  // Assert that selectedTab state is updated
+  expect(wrapper.state('selectedTab')).toBe(1);
+});
+it('updates selectedSmaSubTab when a sub-menu tab is clicked', () => {
+  // Assuming your component has a structure to handle sub-menu tabs
+  const wrapper = shallow(<DashboardMenuTabs /* ... */ />);
 
-  test('isAuthenticated returns true if authenticated', () => {
-    auth.authenticated = true;
-    expect(auth.isAuthenticated()).toBe(true);
-  });
+  // Simulate clicking on a sub-menu tab
+  wrapper.find('button.sub-menu-tab').first().simulate('click');
 
-  test('isAuthenticated returns false if not authenticated', () => {
-    expect(auth.isAuthenticated()).toBe(false);
-  });
+  // Assert that selectedSmaSubTab state is updated
+  expect(wrapper.state('selectedSmaSubTab')).toBe(/* expected value */);
+});
+it('updates selectedManagerSubTab when a manager sub-menu tab is clicked', () => {
+  // Assuming your component has a structure to handle manager sub-menu tabs
+  const wrapper = shallow(<DashboardMenuTabs /* ... */ />);
+
+  // Simulate clicking on a manager sub-menu tab
+  wrapper.find('button.manager-sub-menu-tab').first().simulate('click');
+
+  // Assert that selectedManagerSubTab state is updated
+  expect(wrapper.state('selectedManagerSubTab')).toBe(/* expected value */);
+});
+
 });
