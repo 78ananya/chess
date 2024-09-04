@@ -1,40 +1,26 @@
-// valueGetterFunc.test.js
-import valueGetterFunc from './valueGetterFunc';
-
-describe('valueGetterFunc', () => {
-  it('should return null for undefined data', () => {
-    const params = { data: undefined };
-    const result = valueGetterFunc(params);
-    expect(result).toBe(null);
+// Test cases for valueGetterfunc
+describe('valueGetterfunc', () => {
+  it('should return null for undefined value', () => {
+    const params = { data: {} };
+    const result = valueGetterfunc(params);
+    expect(result).toBeNull();
   });
 
-  it('should return null for null data', () => {
-    const params = { data: null };
-    const result = valueGetterFunc(params);
-    expect(result).toBe(null);
+  it('should return null for null value', () => {
+    const params = { data: { value: null } };
+    const result = valueGetterfunc(params);
+    expect(result).toBeNull();
   });
 
-  it('should return null for empty string data', () => {
-    const params = { data: '' };
-    const result = valueGetterFunc(params);
-    expect(result).toBe(null);
+  it('should return null for "null" string value', () => {
+    const params = { data: { value: 'null' } };
+    const result = valueGetterfunc(params);
+    expect(result).toBeNull();
   });
 
-  it('should return the value for valid data', () => {
-    const params = { data: { attributeName: 'test value' }, colDef: { field: 'attributeName' } };
-    const result = valueGetterFunc(params);
-    expect(result).toBe('test value');
-  });
-
-  it('should handle nested objects', () => {
-    const params = { data: { nested: { attributeName: 'test value' } }, colDef: { field: 'nested.attributeName' } };
-    const result = valueGetterFunc(params);
-    expect(result).toBe('test value');
-  });
-
-  it('should handle invalid field names', () => {
-    const params = { data: { attributeName: 'test value' }, colDef: { field: 'invalidField' } };
-    const result = valueGetterFunc(params);
-    expect(result).toBe(null);
+  it('should return the value if it is not undefined, null, or "null"', () => {
+    const params = { data: { value: 'some value' } };
+    const result = valueGetterfunc(params);
+    expect(result).toBe('some value');
   });
 });
