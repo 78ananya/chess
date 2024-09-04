@@ -46,8 +46,26 @@ describe('loadConfig', () => {
 
     expect(loadConfig).toHaveBeenCalled();
   });
+  
 
   // Add more test cases based on the expected behavior of loadConfig
   // For example, if it's an asynchronous function, you might need to use async/await or promises.
+});
+import { UMAConfig } from './config/index'; // Replace with the actual path
+
+describe('UMAConfig', () => {
+  it('should be an object', () => {
+    expect(UMAConfig).toBeInstanceOf(Object);
+  });
+
+  it('should have expected properties', () => {
+    expect(UMAConfig).toHaveProperty('property1'); // Replace with actual property names
+    expect(UMAConfig).toHaveProperty('property2');
+  });
+
+  it('should have correct values for properties', () => {
+    expect(UMAConfig.property1).toBe('expectedValue1');
+    expect(UMAConfig.property2).toEqual(expectedValue2);
+  });
 });
 
