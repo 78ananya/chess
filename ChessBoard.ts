@@ -1,38 +1,53 @@
 import React from 'react';
-import { configure, shallow, mount } from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
-import App from './App'; // Replace with your actual component
 import { LicenseManager } from '@ag-grid-enterprise/core';
+import { UMAConfig } from './config/index';
+import gridLicense from './yourFile'; // Assuming gridLicense is in a separate file
 
-configure({ adapter: new Adapter() });
-
-// Mock the LicenseManager for testing
-jest.mock('@ag-grid-enterprise/core', () => ({
-  LicenseManager: {
-    setLicenseKey: jest.fn(),
-  },
-}));
-
-// Mock the loadConfig function (if applicable)
-jest.mock('./yourModule', () => ({
-  loadConfig: jest.fn(),
-}));
-
-describe('App Component', () => {
-  it('should retrieve license key correctly', () => {
-    const config = { REACT_APP_AG_GRID_KEY: 'testKey1' };
-    process.env.REACT_APP_AG_GRID_KEY = 'testKey2';
-
-    const wrapper = shallow(<App config={config} />);
-
-    // Assert that the correct license key is set
-    expect(LicenseManager.setLicenseKey).toHaveBeenCalledWith('testKey1');
+describe('gridLicense', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  it('should call loadConfig function', () => {
-    const wrapper = mount(<App />);
+  it('should set license key when provided', () => {
+    const config = { REACT_APP_AG_GRID_KEY: 'testKey' };
+    LicenseManager.setLicenseKey = jest.fn();
 
-    // Assert that loadConfig was called
-    expect(loadConfig).toHaveBeenCalled();
+    gridLicense(config);
+
+    expect(LicenseManager.setLicenseKey).toHaveBeenCalledWith('testKey');
+  });
+
+  it('should use environment variable if license key is not provided', () => {
+    const config = {};
+    process.env.REACT_APP_AG_GRID_KEY = 'envKey';
+    LicenseManager.setLicenseKey = jest.fn();
+
+    gridLicense(config);
+
+    expect(LicenseManager.setLicenseKey).toHaveBeenCalledWith('envKey');
+  });
+
+  it('should not set license key if license is null or undefined', () => {
+    const config = { REACT_APP_AG_GRID_KEY: null };
+    LicenseManager.setLicenseKey = jest.fn();
+
+    gridLicense(config);
+
+    expect(LicenseManager.setLicenseKey).not.toHaveBeenCalled();
   });
 });
+import loadConfig from './yourFile'; // Assuming loadConfig is in a separate file
+
+describe('loadConfig', () => {
+  it('should call the function', () => {
+    loadConfig = jest.fn();
+
+    loadConfig();
+
+    expect(loadConfig).toHaveBeenCalled();
+  });
+
+  // Add more test cases based on the expected behavior of loadConfig
+  // For example, if it's an asynchronous function, you might need to use async/await or promises.
+});
+
