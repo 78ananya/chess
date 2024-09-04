@@ -1,8 +1,4 @@
-import Enzyme from 'enzyme';
-import Adapter from 'enzyme-adapter-react-16';
-import Auth from './auth';
-
-Enzyme.configure({ adapter: new Adapter() });
+import Auth from './auth'; // Assuming auth.js is in the same directory
 
 describe('Auth class', () => {
   let auth;
