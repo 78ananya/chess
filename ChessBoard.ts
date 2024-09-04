@@ -1,3 +1,14 @@
+// Assuming valueGetterfunc is defined in the same file or scope as your test cases
+function valueGetterfunc(params) {
+  const value = params?.data?.[params?.colDef?.field];
+
+  if (value === undefined || value === null || value === 'null') {
+    return null;
+  }
+
+  return value;
+}
+
 // Test cases for valueGetterfunc
 describe('valueGetterfunc', () => {
   it('should return null for undefined value', () => {
