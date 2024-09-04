@@ -1,72 +1,41 @@
-// valueGetterfunc.test.js
-import valueGetterfunc from './valueGetterfunc';
+import Enzyme from 'enzyme';
+import Adapter from 'enzyme-adapter-react-16';
+import Auth from './auth';
 
-describe('valueGetterfunc', () => {
-  it('should return the value when it exists', () => {
-    const params = {
-      data: { foo: 'bar' },
-      colDef: { field: 'foo' }
-    };
+Enzyme.configure({ adapter: new Adapter() });
 
-    const result = valueGetterfunc(params);
-    expect(result).toBe('bar');
+describe('Auth class', () => {
+  let auth;
+
+  beforeEach(() => {
+    auth = new Auth();
   });
 
-  it('should return an empty string when the value is undefined', () => {
-    const params = {
-      data: { foo: undefined },
-      colDef: { field: 'foo' }
-    };
-
-    const result = valueGetterfunc(params);
-    expect(result).toBe('');
+  test('constructor initializes authenticated property to false', () => {
+    expect(auth.authenticated).toBe(false);
   });
 
-  it('should return an empty string when the value is null', () => {
-    const params = {
-      data: { foo: null },
-      colDef: { field: 'foo' }
-    };
-
-    const result = valueGetterfunc(params);
-    expect(result).toBe('');
+  test('login sets authenticated property to true and calls callback', () => {
+    const cb = jest.fn();
+    auth.login(cb);
+    expect(auth.authenticated).toBe(true);
+    expect(cb).toHaveBeenCalled();
   });
 
-  it('should return an empty string when the value is the string "null"', () => {
-    const params = {
-      data: { foo: 'null' },
-      colDef: { field: 'foo' }
-    };
-
-    const result = valueGetterfunc(params);
-    expect(result).toBe('');
+  test('logout sets authenticated property to false and calls callback', () => {
+    auth.authenticated = true;
+    const cb = jest.fn();
+    auth.logout(cb);
+    expect(auth.authenticated).toBe(false);
+    expect(cb).toHaveBeenCalled();
   });
 
-  it('should return an empty string when the data property is missing', () => {
-    const params = {
-      colDef: { field: 'foo' }
-    };
-
-    const result = valueGetterfunc(params);
-    expect(result).toBe('');
+  test('isAuthenticated returns true if authenticated', () => {
+    auth.authenticated = true;
+    expect(auth.isAuthenticated()).toBe(true);
   });
 
-  it('should return an empty string when the colDef property is missing', () => {
-    const params = {
-      data: { foo: 'bar' }
-    };
-
-    const result = valueGetterfunc(params);
-    expect(result).toBe('');
-  });
-
-  it('should return an empty string when the field property in colDef is missing', () => {
-    const params = {
-      data: { foo: 'bar' },
-      colDef: {}
-    };
-
-    const result = valueGetterfunc(params);
-    expect(result).toBe('');
+  test('isAuthenticated returns false if not authenticated', () => {
+    expect(auth.isAuthenticated()).toBe(false);
   });
 });
