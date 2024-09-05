@@ -1,47 +1,186 @@
-describe('DashboardMenuTabs', () => {
-  it('renders correctly with initial props', () => {
-    const menuTabs = [
-      { title: 'Tab 1', number: 1 },
-      { title: 'Tab 2', number: 2 }
-    ];
+import { testSaga } from 'redux-saga-test-plan';
+import { getSagaSmaTableData, getSagaSmaTableDataUX, getSmaExportToExcel, watcherSmDashboardSaga } from './smDashboardSaga';
+import { SMDashboardTableTypes } from './actionTypes';
+import { apiCall, apiPostCall, downloadApiCall } from '../api/api';
+import { getConfig } from '../../config/index';
+import { properties } from '../../config/applicationProperties.json';
 
-    const wrapper = shallow(<DashboardMenuTabs menuTabs={menuTabs} />);
+jest.mock('../api/api', () => ({
+  apiCall: jest.fn(),
+  apiPostCall: jest.fn(),
+  downloadApiCall: jest.fn(),
+}));
 
-    expect(wrapper).toMatchSnapshot();
+jest.mock('../../config/index', () => ({
+  getConfig: jest.fn(),
+}));
+
+jest.mock('../../config/applicationProperties.json', () => ({
+  properties: {
+    smDashboardSmaDataPath: 'sma-data-path',
+    smDashboardSmaDataPathUX: 'sma-data-path-ux',
+    smDashboardSmaDataExport: 'sma-data-export',
+  },
+}));
+
+describe('smDashboardSaga', () => {
+  describe('getSagaSmaTableData', () => {
+    it('should call apiCall with correct request parameters', () => {
+      const action = {
+        params: {
+          endRow: 20,
+          sortModel: [{ colId: 'column1', sort: 'asc' }],
+          filterModel: { column1: { type: 'equals', value: 'filterValue' } },
+          programCode: 'programCode1',
+          strategyStatus: 'active',
+        },
+      };
+
+      testSaga(getSagaSmaTableData, action)
+        .next()
+        .call(apiCall, 'sma-data-path', {
+          search: 'filterValue',
+          filterText: 'filterValue',
+          searchIn: 'column1',
+          page: 1,
+          resultsPerPage: 20,
+          sortBy: 'column1',
+          sortOrder: 'asc',
+          programCode: 'programCode1',
+          status: 'active',
+        })
+        .next()
+        .put({
+          type: SMDashboardTableTypes.FETCH_SMA_TABLE_DATA_ASYNC,
+          data: {
+            data: [],
+            success: true,
+            headers: {},
+          },
+        })
+        .next()
+        .isDone();
+    });
+
+    it('should handle error response from apiCall', () => {
+      const action = {
+        params: {
+          endRow: 20,
+          sortModel: [{ colId: 'column1', sort: 'asc' }],
+          filterModel: { column1: { type: 'equals', value: 'filterValue' } },
+          programCode: 'programCode1',
+          strategyStatus: 'active',
+        },
+      };
+
+      apiCall.mockImplementation(() => {
+        throw new Error('API error');
+      });
+
+      testSaga(getSagaSmaTableData, action)
+        .next()
+        .call(apiCall, 'sma-data-path', {
+          search: 'filterValue',
+          filterText: 'filterValue',
+          searchIn: 'column1',
+          page: 1,
+          resultsPerPage: 20,
+          sortBy: 'column1',
+          sortOrder: 'asc',
+          programCode: 'programCode1',
+          status: 'active',
+        })
+        .next()
+        .put({
+          type: SMDashboardTableTypes.FETCH_SMA_TABLE_DATA_ASYNC,
+          data: {
+            data: [],
+            success: false,
+            headers: {},
+          },
+        })
+        .next()
+        .isDone();
+    });
   });
-  it('updates selectedTab when a tab is clicked', () => {
-  const menuTabs = [
-    { title: 'Tab 1', number: 1 },
-    { title: 'Tab 2', number: 2 }
-  ];
 
-  const wrapper = shallow(<DashboardMenuTabs menuTabs={menuTabs} />);
+  describe('getSagaSmaTableDataUX', () => {
+    it('should call apiPostCall with correct request parameters', () => {
+      const action = {
+        params: {
+          endRow: 20,
+          sortModel: [{ colId: 'column1', sort: 'asc' }],
+          filterModel: { column1: { type: 'equals', value: 'filterValue' } },
+          programCode: 'programCode1',
+          strategyStatus: 'active',
+          globalSearch: 'globalSearchText',
+        },
+      };
 
-  // Simulate clicking on the first tab
-  wrapper.find('button').first().simulate('click');
+      testSaga(getSagaSmaTableDataUX, action)
+        .next()
+        .call(apiPostCall, 'sma-data-path-ux', {
+          columnSearch: 'filterValue',
+          searchIn: 'column1',
+          globalSearch: 'globalSearchText',
+          page: 1,
+          resultsPerPage: 20,
+          sortBy: 'column1',
+          sortOrder: 'asc',
+          programCode: 'programCode1',
+          status: 'active',
+        })
+        .next()
+        .put({
+          type: SMDashboardTableTypes.FETCH_SMA_TABLE_DATA_UX_ASYNC,
+          data: {
+            data: [],
+            success: true,
+            headers: {},
+          },
+        })
+        .next()
+        .isDone();
+    });
+    it('should handle error response from apiPostCall', () => {
+  const action = {
+    params: {
+      endRow: 20,
+      sortModel: [{ colId: 'column1', sort: 'asc' }],
+      filterModel: { column1: { type: 'equals', value: 'filterValue' } },
+      programCode: 'programCode1',
+      strategyStatus: 'active',
+      globalSearch: 'globalSearchText',
+    },
+  };
 
-  // Assert that selectedTab state is updated
-  expect(wrapper.state('selectedTab')).toBe(1);
+  apiPostCall.mockImplementation(() => {
+    throw new Error('API error');
+  });
+
+  testSaga(getSagaSmaTableDataUX, action)
+    .next()
+    .call(apiPostCall, 'sma-data-path-ux', {
+      columnSearch: 'filterValue',
+      searchIn: 'column1',
+      globalSearch: 'globalSearchText',
+      page: 1,
+      resultsPerPage: 20,
+      sortBy: 'column1',
+      sortOrder: 'asc',
+      programCode: 'programCode1',
+      status: 'active',
+    })
+    .next()
+    .put({
+      type: SMDashboardTableTypes.FETCH_SMA_TABLE_DATA_UX_ASYNC,
+      data: {
+        data: [],
+        success: false,
+        headers: {},
+      },
+    })
+    .next()
+    .isDone();
 });
-it('updates selectedSmaSubTab when a sub-menu tab is clicked', () => {
-  // Assuming your component has a structure to handle sub-menu tabs
-  const wrapper = shallow(<DashboardMenuTabs /* ... */ />);
-
-  // Simulate clicking on a sub-menu tab
-  wrapper.find('button.sub-menu-tab').first().simulate('click');
-
-  // Assert that selectedSmaSubTab state is updated
-  expect(wrapper.state('selectedSmaSubTab')).toBe(/* expected value */);
-});
-it('updates selectedManagerSubTab when a manager sub-menu tab is clicked', () => {
-  // Assuming your component has a structure to handle manager sub-menu tabs
-  const wrapper = shallow(<DashboardMenuTabs /* ... */ />);
-
-  // Simulate clicking on a manager sub-menu tab
-  wrapper.find('button.manager-sub-menu-tab').first().simulate('click');
-
-  // Assert that selectedManagerSubTab state is updated
-  expect(wrapper.state('selectedManagerSubTab')).toBe(/* expected value */);
-});
-
-});
+    
