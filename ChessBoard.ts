@@ -142,45 +142,47 @@ describe('smDashboardSaga', () => {
         .next()
         .isDone();
     });
+
     it('should handle error response from apiPostCall', () => {
-  const action = {
-    params: {
-      endRow: 20,
-      sortModel: [{ colId: 'column1', sort: 'asc' }],
-      filterModel: { column1: { type: 'equals', value: 'filterValue' } },
-      programCode: 'programCode1',
-      strategyStatus: 'active',
-      globalSearch: 'globalSearchText',
-    },
-  };
+      const action = {
+        params: {
+          endRow: 20,
+          sortModel: [{ colId: 'column1', sort: 'asc' }],
+          filterModel: { column1: { type: 'equals', value: 'filterValue' } },
+          programCode: 'programCode1',
+          strategyStatus: 'active',
+          globalSearch: 'globalSearchText',
+        },
+      };
 
-  apiPostCall.mockImplementation(() => {
-    throw new Error('API error');
+      apiPostCall.mockImplementation(() => {
+        throw new Error('API error');
+      });
+
+      testSaga(getSagaSmaTableDataUX, action)
+        .next()
+        .call(apiPostCall, 'sma-data-path-ux', {
+          columnSearch: 'filterValue',
+          searchIn: 'column1',
+          globalSearch: 'globalSearchText',
+          page: 1,
+          resultsPerPage: 20,
+          sortBy: 'column1',
+          sortOrder: 'asc',
+          programCode: 'programCode1',
+          status: 'active',
+        })
+        .next()
+        .put({
+          type: SMDashboardTableTypes.FETCH_SMA_TABLE_DATA_UX_ASYNC,
+          data: {
+            data: [],
+            success: false,
+            headers: {},
+          },
+        })
+        .next()
+        .isDone();
+    });
   });
-
-  testSaga(getSagaSmaTableDataUX, action)
-    .next()
-    .call(apiPostCall, 'sma-data-path-ux', {
-      columnSearch: 'filterValue',
-      searchIn: 'column1',
-      globalSearch: 'globalSearchText',
-      page: 1,
-      resultsPerPage: 20,
-      sortBy: 'column1',
-      sortOrder: 'asc',
-      programCode: 'programCode1',
-      status: 'active',
-    })
-    .next()
-    .put({
-      type: SMDashboardTableTypes.FETCH_SMA_TABLE_DATA_UX_ASYNC,
-      data: {
-        data: [],
-        success: false,
-        headers: {},
-      },
-    })
-    .next()
-    .isDone();
 });
-    
