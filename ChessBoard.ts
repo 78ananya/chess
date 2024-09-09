@@ -4,12 +4,7 @@ import { apiCall } from "../api/api";
 import { SMDashboardTableTypes } from "factionType";
 import { getConfig } from "../../config";
 import properties from "../../config/applicationProperties.json";
-
-// Mock constants
-const constants = {
-  GRID_BLOCK_SIZE: 20,
-  SMA_RESPONSE_FIELDS: ["field1", "field2"],
-};
+import { constants } from '../../helpers/constants'; // Import actual constants
 
 describe("getSagaSmaTableData Saga", () => {
   it("should fetch SMA table data and dispatch success action", () => {
@@ -28,7 +23,7 @@ describe("getSagaSmaTableData Saga", () => {
     const reqParams = {
       search: "",
       searchIn: "",
-      page: 2, // 40 / 20 + 1
+      page: 2, // 40 / GRID_BLOCK_SIZE + 1 (assuming GRID_BLOCK_SIZE is 20)
       resultsPerPage: constants.GRID_BLOCK_SIZE,
       responseFields: constants.SMA_RESPONSE_FIELDS,
       sortBy: "name",
@@ -115,11 +110,7 @@ import { apiPostCall } from "../api/api";
 import { SMDashboardTableTypes } from "factionType";
 import { getConfig } from "../../config";
 import properties from "../../config/applicationProperties.json";
-
-// Mock constants
-const constants = {
-  GRID_BLOCK_SIZE_NEW: 25,
-};
+import { constants } from '../../helpers/constants'; // Import actual constants
 
 describe("getSagaSmaTableDataUX Saga", () => {
   it("should fetch UX SMA table data and dispatch success action", () => {
@@ -139,7 +130,7 @@ describe("getSagaSmaTableDataUX Saga", () => {
     const reqParams = {
       columnSearch: "",
       searchIn: "",
-      page: 2, // 50 / 25 + 1
+      page: 2, // 50 / GRID_BLOCK_SIZE_NEW + 1 (assuming GRID_BLOCK_SIZE_NEW is 25)
       resultsPerPage: constants.GRID_BLOCK_SIZE_NEW,
       sortBy: "status",
       sortOrder: "desc",
@@ -224,5 +215,4 @@ describe("watcherSmDashboardSaga", () => {
     expect(generator.next().value).toEqual(takeEvery(SMDashboardTableTypes.SMA_EXPORT_TO_EXCEL, getSmaExportToExcel));
   });
 });
-
 
